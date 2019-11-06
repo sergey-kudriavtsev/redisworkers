@@ -1,0 +1,27 @@
+version:                           "3.5"
+
+services:
+
+  redis:
+    container_name:                workers-redis
+    image:                         "redis:alpine"
+
+    ports:
+      - 6379:6379
+  pm2:
+    image:                         'keymetrics/pm2:12-alpine'
+    container_name:                workers-pm2
+
+    environment:
+      - PM2_PUBLIC_KEY=${PM2_PUBLIC_KEY:-}
+      - PM2_SECRET_KEY=${PM2_SECRET_KEY:-}
+    working_dir:                   /app
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+    ports:
+      - ${APP_PORT:-8080}:${APP_PORT:-8080}
+    links:
+      - redis
+    command:                       ["pm2-runtime", "start", "ecosystem.config.js"]
